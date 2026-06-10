@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔐 Офлайн Шифратор</title>
+
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #000000;
+      --input-bg: #f0f0f0;
+      --btn-bg: #007bff;
+      --btn-text: #ffffff;
+      --error: #ffcccc;
+      --border: #cccccc;
+    }
+
+    body {
+      font-family: sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 20px;
+      max-width: 700px;
+      margin: auto;
+      transition: 0.3s;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    textarea,
+    input,
+    button {
+      width: 100%;
+      font-size: 16px;
+      padding: 12px;
+      margin: 10px 0;
+      box-sizing: border-box;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--input-bg);
+      color: var(--text);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    button {
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      opacity: 0.9;
+      transform: scale(1.01);
+    }
+
+    .theme-switcher {
+      display: flex;
+      gap: 10px;
+    }
+
+    .error {
+      background: var(--error);
+      border: 1px solid red;
+    }
+
+    .small-btn {
+      font-size: 14px;
+      padding: 8px;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      opacity: 0.7;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>🔐 Офлайн Шифратор</h2>
+
+  <div class="theme-switcher">
+    <button onclick="setTheme('light')">☀️ Світла тема</button>
+    <button onclick="setTheme('dark')">🌙 Темна тема</button>
+  </div>
+
+  <label>Текст або шифр:</label>
+  <textarea id="message" placeholder="Введи текст..."></textarea>
+
+  <label>Пароль:</label>
+  <input type="text" id="password" placeholder="Введи пароль">
+
+  <button onclick="encryptText()">🔒 Зашифрувати</button>
+  <button onclick="decryptText()">🔓 Розшифрувати</button>
+
+  <label>Результат:</label>
+  <textarea id="result" readonly></textarea>
+
+  <button class="small-btn" onclick="copyResult()">📋 Копіювати результат</button>
+
+  <div class="footer">
+    Працює повністю офлайн
+  </div>
+
+  <script>
+
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+    function validateFields(requireMessage = true) {
+
+      const msg = document.getElementById("message");
+      const pass = document.getElementById("password");
+
+      let valid = true;
+
+      msg.classList.remove("error");
+      pass.classList.remove("error");
+
+      if (requireMessage && msg.value.trim() === "") {
+        msg.classList.add("error");
+        valid = false;
+      }
+
+      if (pass.value.trim() === "") {
+        pass.classList.add("error");
+        valid = false;
+      }
+
+      if (!valid) {
+        alert("Будь ласка, заповни всі поля!");
+      }
+
+      return valid;
+    }
+
+    function stringToBytes(str) {
+      return new TextEncoder().encode(str);
+    }
+
+    function bytesToString(bytes) {
+      return new TextDecoder().decode(bytes);
+    }
+
+    function xorEncrypt(dataBytes, passBytes) {
+
+      const result = new Uint8Array(dataBytes.length);
+
+      for (let i = 0; i < dataBytes.length; i++) {
+
+        const key =
+          passBytes[i % passBytes.length] ^
+          ((i * 31) % 255);
+
+        result[i] = dataBytes[i] ^ key;
+      }
+
+      return result;
+    }
+
+    function bytesToLetters(bytes) {
+
+      let result = "";
+
+      for (let byte of bytes) {
+
+        const high = (byte >> 4) & 15;
+        const low = byte & 15;
+
+        result += letters[high];
+        result += letters[low];
+      }
+
+      return result;
+    }
+
+    function lettersToBytes(str) {
+
+      if (str.length % 2 !== 0) {
+        throw new Error("Неправильний шифр");
+      }
+
+      const bytes = [];
+
+      for (let i = 0; i < str.length; i += 2) {
+
+        const high = letters.indexOf(str[i]);
+        const low = letters.indexOf(str[i + 1]);
+
+        if (high === -1 || low === -1) {
+          throw new Error("Неправильний шифр");
+        }
+
+        bytes.push((high << 4) | low);
+      }
+
+      return new Uint8Array(bytes);
+    }
+
+    function encryptText() {
+
+      if (!validateFields(true)) return;
+
+      const text = document.getElementById("message").value;
+      const password = document.getElementById("password").value;
+
+      const textBytes = stringToBytes(text);
+      const passBytes = stringToBytes(password);
+
+      const encryptedBytes = xorEncrypt(textBytes, passBytes);
+
+      const encoded = bytesToLetters(encryptedBytes);
+
+      document.getElementById("result").value = encoded;
+    }
+
+    function decryptText() {
+
+      if (!validateFields(true)) return;
+
+      const encryptedText =
+        document.getElementById("message").value;
+
+      const password =
+        document.getElementById("password").value;
+
+      try {
+
+        const encryptedBytes =
+          lettersToBytes(encryptedText);
+
+        const passBytes =
+          stringToBytes(password);
+
+        const decryptedBytes =
+          xorEncrypt(encryptedBytes, passBytes);
+
+        const text =
+          bytesToString(decryptedBytes);
+
+        document.getElementById("result").value = text;
+
+      } catch (e) {
+
+        alert("Помилка розшифрування!");
+      }
+    }
+
+    function copyResult() {
+
+      const result =
+        document.getElementById("result");
+
+      result.select();
+      document.execCommand("copy");
+
+      alert("Скопійовано!");
+    }
+
+    function setTheme(mode) {
+
+      const root =
+        document.documentElement;
+
+      if (mode === "dark") {
+
+        root.style.setProperty('--bg', '#1e1e1e');
+        root.style.setProperty('--text', '#ffffff');
+        root.style.setProperty('--input-bg', '#333333');
+        root.style.setProperty('--btn-bg', '#4444cc');
+        root.style.setProperty('--btn-text', '#ffffff');
+        root.style.setProperty('--error', '#662222');
+        root.style.setProperty('--border', '#555555');
+
+      } else {
+
+        root.style.setProperty('--bg', '#ffffff');
+        root.style.setProperty('--text', '#000000');
+        root.style.setProperty('--input-bg', '#f0f0f0');
+        root.style.setProperty('--btn-bg', '#007bff');
+        root.style.setProperty('--btn-text', '#ffffff');
+        root.style.setProperty('--error', '#ffcccc');
+        root.style.setProperty('--border', '#cccccc');
+      }
+    }
+
+  </script>
+
+</body>
+</html>
