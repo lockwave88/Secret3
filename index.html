@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="uk">
+
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🔐 Офлайн Шифратор</title>
+  <title>🔐 Offline Encoder</title>
 
   <style>
     :root {
@@ -85,34 +86,31 @@
       font-size: 14px;
     }
   </style>
+
 </head>
 
 <body>
 
-  <h2>🔐 Офлайн Шифратор</h2>
+  <h2>🔐 Offline Encoder</h2>
 
   <div class="theme-switcher">
-    <button onclick="setTheme('light')">☀️ Світла тема</button>
-    <button onclick="setTheme('dark')">🌙 Темна тема</button>
+    <button onclick="setTheme('light')">☀️ Light mode</button>
+    <button onclick="setTheme('dark')">🌙 Dark mode</button>
   </div>
 
-  <label>Текст або шифр:</label>
-  <textarea id="message" placeholder="Введи текст..."></textarea>
+<label>Text or cipher:</label>
 
-  <label>Пароль:</label>
-  <input type="text" id="password" placeholder="Введи пароль">
+  <textarea id="message" placeholder="Enter text..."></textarea>
 
-  <button onclick="encryptText()">🔒 Зашифрувати</button>
-  <button onclick="decryptText()">🔓 Розшифрувати</button>
+<label>Password:</label> <input type="text" id="password" placeholder="Enter password">
 
-  <label>Результат:</label>
+<button onclick="encryptText()">🔒 Encrypt</button> <button onclick="decryptText()">🔓 Decrypt</button>
+
+<label>Result:</label>
+
   <textarea id="result" readonly></textarea>
 
-  <button class="small-btn" onclick="copyResult()">📋 Копіювати результат</button>
-
-  <div class="footer">
-    Працює повністю офлайн
-  </div>
+<button class="small-btn" onclick="copyResult()">📋 Copy</button>
 
   <script>
 
@@ -139,7 +137,7 @@
       }
 
       if (!valid) {
-        alert("Будь ласка, заповни всі поля!");
+        alert("Please fill in all fields!");
       }
 
       return valid;
@@ -188,7 +186,7 @@
     function lettersToBytes(str) {
 
       if (str.length % 2 !== 0) {
-        throw new Error("Неправильний шифр");
+        throw new Error("Invalid cipher");
       }
 
       const bytes = [];
@@ -199,7 +197,7 @@
         const low = letters.indexOf(str[i + 1]);
 
         if (high === -1 || low === -1) {
-          throw new Error("Неправильний шифр");
+          throw new Error("Invalid cipher");
         }
 
         bytes.push((high << 4) | low);
@@ -253,7 +251,7 @@
 
       } catch (e) {
 
-        alert("Помилка розшифрування!");
+        alert("Decryption error!");
       }
     }
 
@@ -265,7 +263,7 @@
       result.select();
       document.execCommand("copy");
 
-      alert("Скопійовано!");
+      alert("Copied!");
     }
 
     function setTheme(mode) {
